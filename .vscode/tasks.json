@@ -1,0 +1,49 @@
+
+{
+    "version": "0.1.0",
+    "command": "bash",
+    "args": ["-c"],
+    "isShellCommand": true,
+    "showOutput": "always",
+    "suppressTaskName": true,
+    "options": {
+        "cwd": "${workspaceRoot}",
+        "env": { 
+            "IDF_PATH" : "${env:HOME}/esp/esp-idf", 
+            "PYTHONPATH" : "/usr/local/lib/python2.7/site-packages",
+            "PATH" : "${env:PATH}:${env:HOME}/esp/xtensa-esp32-elf/bin",
+            "MAKEFLAGS" : "${env:MAKEFLAGS} -j 7"
+        }
+    },
+    "tasks": [
+        {
+            "taskName": "build",
+            "args": ["make"],
+            "isBuildCommand": true,
+            "problemMatcher": {
+                "owner": "cpp",
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            }
+        },
+        {
+            "taskName": "clean",
+            "args": ["make clean"]
+        },
+        {
+            "taskName": "monitor",
+            "args": ["make monitor"]
+        },
+        {
+            "taskName": "flash",
+            "args": ["make flash"]
+        }
+    ]
+}
