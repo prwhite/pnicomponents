@@ -1,3 +1,8 @@
+////////////////////////////////////////////////////////////////////
+//
+//
+//
+////////////////////////////////////////////////////////////////////
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -6,17 +11,24 @@
 
 #include "pnitask.h"
 
+////////////////////////////////////////////////////////////////////
+
 static const char* TAG = "task";
+
+////////////////////////////////////////////////////////////////////
 
 namespace pni {
 
+////////////////////////////////////////////////////////////////////
+
 Task::Task(std::string const& name) :
-        mName(name) {
+        mName(name),
+        mTask(0) {
 
 }
 
 Task::~Task() {
-
+    // Does not cancel automatically.
 }
 
 bool Task::start() {
@@ -33,6 +45,7 @@ bool Task::start() {
 
 void Task::cancel() {
     vTaskDelete(0);
+    mTask = 0;
 }
 
 void Task::taskFunc( void* param ) {
@@ -41,7 +54,8 @@ void Task::taskFunc( void* param ) {
 }
 
 void Task::taskMethod() {
-
+    ESP_LOGV(TAG, "Task::taskMethod default implementation called");
+    cancel();
 }
 
 void Task::lock() {
@@ -51,5 +65,32 @@ void Task::lock() {
 void Task::unlock() {
     // TODO
 }
+
+Task* Task::createAndStart(std::string const& name) {
+    auto task = new Task(name);
+    task->start();
+    return task;
+}
+
+////////////////////////////////////////////////////////////////////
+
+TaskLambda::TaskLambda(std::string const& name, Lambda lambda) :
+    Task(name),
+    mLambda(lambda)
+{
+
+}
+
+void TaskLambda::taskMethod() {
+    mLambda();
+}
+
+Task* TaskLambda::createAndStart(std::string const& name, Lambda lambda) {
+    auto task = new TaskLambda(name, lambda);
+    task->start();
+    return task;
+}
+
+////////////////////////////////////////////////////////////////////
 
 } // end namespace pni
