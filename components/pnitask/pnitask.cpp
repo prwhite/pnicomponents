@@ -44,8 +44,10 @@ bool Task::start() {
 }
 
 void Task::cancel() {
-    vTaskDelete(0);
-    mTask = 0;
+    if (mTask != 0) {
+        vTaskDelete(mTask);
+        mTask = 0;
+    }
 }
 
 void Task::taskFunc( void* param ) {
