@@ -12,7 +12,7 @@ The included components are generally re-usable and have limited coupling, allow
 
 Functionality covered by the components (**pretty much all of these are TODOs**):
 * Processing:
-    * `Task`: A simple wrapper around FreeRTOS `xTaskCreate` and related functions \[[more](http://www.freertos.org/a00125.html)\].  Also included:
+    * `Task`: ![Done](src/label-done.png)![Done](src/label-untested.png)![TBD](src/label-tbd.png) A simple wrapper around FreeRTOS `xTaskCreate` and related functions \[[more](http://www.freertos.org/a00125.html)\].  Also included:
         * `TaskLambda`: A task that takes a C++11 lambda for the task callback rather than requiring the developer to derive a class and override the virtual task method.
     * `Queue`: A thread safe FIFO.  Thread safe only for push and pop.
     * `LambdaQueue`:  A queue for lambdas to be passed safely from one task to another.
@@ -24,6 +24,7 @@ Functionality covered by the components (**pretty much all of these are TODOs**)
     * `Gauge`: Classes to show data in various forms.  Targeted for monochrome displays (i.e., OLEDs such as SSD1306), so not too fancy.
         * `GaugeLinear`: Bar and line graphs for 1D data.
         * `GaugeRadial`: Radial graph (a la speedometer or tachometer).
+    * `Mapper` For clut to map colors between display devices.  Can be used for keeping constant brightness while animating hue.
 
 ## Recommended Usage
 
