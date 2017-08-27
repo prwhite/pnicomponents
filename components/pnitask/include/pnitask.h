@@ -23,6 +23,9 @@ class Task {
         bool start();
         virtual void cancel();  // Not called by destructor, should be called at end of `taskMethod`.
 
+        static void delay(size_t msec);             // 10 ms resolution
+        static void delayTicks(TickType_t ticks);   // 10 ms resolution
+
         void lock();
         void unlock();
 

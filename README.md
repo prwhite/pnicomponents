@@ -12,14 +12,14 @@ The included components are generally re-usable and have limited coupling, allow
 
 Functionality covered by the components (**pretty much all of these are TODOs**):
 * Processing:
-    * `Task`: ![Done](src/label-done.png)![Done](src/label-untested.png)![TBD](src/label-tbd.png) A simple wrapper around FreeRTOS `xTaskCreate` and related functions \[[more](http://www.freertos.org/a00125.html)\].  Also included:
+    * `Task`: ![In Progress](src/label-progress.png) A simple wrapper around FreeRTOS `xTaskCreate` and related functions \[[more](http://www.freertos.org/a00125.html)\].  Also included:
         * `TaskLambda`: A task that takes a C++11 lambda for the task callback rather than requiring the developer to derive a class and override the virtual task method.
     * `Queue`: A thread safe FIFO.  Thread safe only for push and pop.
     * `LambdaQueue`:  A queue for lambdas to be passed safely from one task to another.
     * `Actor`: A task with an associated lambda queue.
     * `Dispatcher`: To send/receive process-wide notifications.
 * Presentation:
-    * `Color`: For manipulating colors in RGB and HSV space.  Includes lerp functions in both color spaces which is handy for LED animations.
+    * `Color`: ![In Progress](src/label-progress.png) For manipulating colors in RGB and HSV space.  Includes lerp functions in both color spaces which is handy for LED animations.
     * `ArrayResampler`: For up and downsampling an array of data.  Handy for scaling 1D image data for display on different size LED strips.  Should probably make a 2D array resampler and then get 1D functionality _for free_.
     * `Gauge`: Classes to show data in various forms.  Targeted for monochrome displays (i.e., OLEDs such as SSD1306), so not too fancy.
         * `GaugeLinear`: Bar and line graphs for 1D data.

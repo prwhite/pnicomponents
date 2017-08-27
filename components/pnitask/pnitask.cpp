@@ -60,6 +60,15 @@ void Task::taskMethod() {
     cancel();
 }
 
+void Task::delay(size_t msec) {
+    // vTaskDelay(configTICK_RATE_HZ * usec);
+    vTaskDelay(msec / portTICK_PERIOD_MS);
+}
+
+void Task::delayTicks(TickType_t ticks) {
+    vTaskDelay(ticks);
+}
+
 void Task::lock() {
     // TODO
 }

@@ -8,6 +8,8 @@
 ////////////////////////////////////////////////////////////////////
 
 #include <cstdint>
+#include <cstddef>
+#include "pnifixedpoint.h"
 
 ////////////////////////////////////////////////////////////////////
 
@@ -21,32 +23,24 @@ class ColorHsv;
 
 class Color {
     public:
-        virtual ~Color() = 0;
+        virtual ~Color() = 0;   // Really don't need this, derived classes do no allocation.
 
-        using Component = uint16_t; // Works with any bit size <= 16.  Internal math is 32 bit and protects against overflows.
+        using Component = FixedPoint< int32_t, 5, 10 >;
 
         struct Rgb {
-            Component r = 0;
-            Component g = 0;
-            Component b = 0;
+            Component g;
+            Component r;
+            Component b;
 
-            Rgb& operator += (int amount) { r += amount; g += amount; b += amount; return *this; }
-            Rgb& operator -= (int amount) { r -= amount; g -= amount; b -= amount; return *this; }
-            
-            Rgb& operator >>=(int count) { r >>= count; g >>= count; b >>= count;  return *this; }
-            Rgb& operator <<=(int count) { r <<= count; g <<= count; b <<= count;  return *this; }
+            static Rgb lerp(Rgb const& lhs, Rgb const& rhs, Component const& tval);
         };
 
         struct Hsv {
-            Component h = 0;
-            Component s = 0;
-            Component v = 0;
+            Component h;
+            Component s;
+            Component v;
 
-            Hsv& operator += (int amount) { h += amount; s += amount; v += amount; return *this; }
-            Hsv& operator -= (int amount) { h -= amount; s -= amount; v -= amount; return *this; }
-
-            Hsv& operator >>=(int count) { h >>= count; s >>= count; v >>= count;  return *this; }
-            Hsv& operator <<=(int count) { h <<= count; s <<= count; v <<= count;  return *this; }
+            static Hsv lerp(Hsv const& lhs, Hsv const& rhs, Component const& tval);
         };
 
             // Conversion operators, simply dispatches to conversion functions below.
@@ -55,8 +49,8 @@ class Color {
 
             // Linear interpolation.
             // TRICKY: keyed off of type of first argument.
-        static Rgb lerp(ColorRgb const& lhs, Color const&rhs);
-        static Hsv lerp(ColorHsv const& lhs, Color const&rhs);
+        static Rgb lerp(ColorRgb const& lhs, Color const&rhs, Component const& tval);
+        static Hsv lerp(ColorHsv const& lhs, Color const&rhs, Component const& tval);
 
             // Conversion functions.
         virtual Rgb toRgb() const = 0;
@@ -68,25 +62,26 @@ class Color {
     private:
 };
 
-class ColorRgb : public Color {
+class ColorRgb final : public Color {
     public:
         ColorRgb(Color const& color);
         ColorRgb(Rgb const& rgb);
 
-        virtual Rgb toRgb() const;
-        virtual Hsv toHsv() const;
+        virtual Rgb toRgb() const final;
+        virtual Hsv toHsv() const final;
 
     private:
         Rgb mRgb;
 };
 
-class ColorHsv : public Color {
+class ColorHsv final : public Color {
     public:
         ColorHsv(Color const& color);
         ColorHsv(Hsv const& hsv);
 
-        virtual Rgb toRgb() const;
-        virtual Hsv toHsv() const;
+        virtual Rgb toRgb() const final;
+        virtual Hsv toHsv() const final;
+        
     private:
         Hsv mHsv;
 };
