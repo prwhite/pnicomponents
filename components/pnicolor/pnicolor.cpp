@@ -97,13 +97,13 @@ Color::Hsv ColorRgb::toHsv() const {
     if (maxVal == minVal) {
         hsv.h = 0;
     } else {
-        Component mult = 1.0 / 3.0;
+        Component mult (1.0f / 3.0f);
         if (maxVal == mRgb.r) {
-            hsv.h = (mRgb.g - mRgb.b) / vd + mRgb.g < mRgb.b ? 3 * mult : 0;
+            hsv.h = (mRgb.g - mRgb.b) / vd + ( ( mRgb.g < mRgb.b ) ? mult * 3 : Component(0) );
         } else if (maxVal == mRgb.g) {
-            hsv.h = (mRgb.b - mRgb.r) / vd + 1 * mult;
+            hsv.h = (mRgb.b - mRgb.r) / vd + mult * 1;
         } else if (maxVal == mRgb.b) {
-            hsv.h = (mRgb.r - mRgb.g) / vd + 2 * mult;
+            hsv.h = (mRgb.r - mRgb.g) / vd + mult * 2;
         } else {
             hsv.h = 0;
         }
@@ -130,7 +130,7 @@ Color::Rgb ColorHsv::toRgb() const {
     Component hn6 = mHsv.h % 1; // [0,1), can do that because hue wraps around anyway
     hn6 *= 6;                   // [0,6)
     Component hd = hn6 % 1;     // [0,1), delta between lhi and rhi
-    size_t lhi = hn6;           // implicit truncation of fractional part gives 0...5 index into table
+    size_t lhi = hn6.get();     // implicit truncation of fractional part gives 0...5 index into table
     size_t rhi = (lhi + 1) % 6; // 0...5, handles wrap-around
 
     auto rgbFull = Color::Rgb::lerp(Rgb(table[lhi]), Rgb(table[rhi]), hd);
