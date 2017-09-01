@@ -33,14 +33,14 @@ class FixedPoint {
     private:
         // Internal constructor for raw values.
         // Uses dumb enum to make sure right constructor is invoked.
-        enum ConstructorType { Raw };
+        enum ConstructorType { Scaled };
         FixedPoint(SrcType const& val, ConstructorType dummy) : mVal ( val ) {}   // Scaled SrcType
     
     public:
         // Conversion constructors, _currently_ with no range checking.
-        FixedPoint(SrcType const& val) : mVal ( val * Scale ) {}                 // Unscaled SrcType
-        explicit FixedPoint(float const& val) : mVal ( val * Scale ) {}          // Unscaled float
-        explicit FixedPoint(double const& val) : mVal ( val * Scale ) {}         // Unscaled double
+        FixedPoint(SrcType const& val) : mVal ( val * Scale ) {}                // Unscaled SrcType
+        explicit FixedPoint(float const& val) : mVal ( val * Scale ) {}         // Unscaled float
+        explicit FixedPoint(double const& val) : mVal ( val * Scale ) {}        // Unscaled double
 
         // Assignment operators
         FixedPoint& operator = (SrcType const& rhs) { mVal = rhs * Scale; return *this; }
@@ -49,35 +49,25 @@ class FixedPoint {
         FixedPoint& operator = (double const& rhs) { mVal = rhs * Scale; return *this; }
         
         // Arithmetic operations
-        FixedPoint operator + (FixedPoint const& rhs) const { return FixedPoint(mVal + rhs.mVal, Raw); }
-        FixedPoint operator + (SrcType const& rhs) const { return FixedPoint(mVal + rhs * Scale, Raw); }
+        FixedPoint operator + (FixedPoint const& rhs) const { return FixedPoint(mVal + rhs.mVal, Scaled); }
         FixedPoint& operator += (FixedPoint const& rhs) { mVal += rhs.mVal; return *this; }
-        FixedPoint& operator += (SrcType const& rhs) { mVal += rhs * Scale; return *this; }
         
-        FixedPoint operator - (FixedPoint const& rhs) const { return FixedPoint(mVal - rhs.mVal, Raw); }
-        FixedPoint operator - (SrcType const& rhs) const { return FixedPoint(mVal - rhs * Scale, Raw); }
+        FixedPoint operator - (FixedPoint const& rhs) const { return FixedPoint(mVal - rhs.mVal, Scaled); }
         FixedPoint& operator -= (FixedPoint const& rhs) { mVal -= rhs.mVal; return *this; }
-        FixedPoint& operator -= (SrcType const& rhs) { mVal -= rhs * Scale; return *this; }
 
-        FixedPoint operator * (FixedPoint const& rhs) const { return FixedPoint(mVal * rhs.mVal / Scale, Raw); }
-        FixedPoint operator * (SrcType const& rhs) const { return FixedPoint(mVal * rhs, Raw); }
+        FixedPoint operator * (FixedPoint const& rhs) const { return FixedPoint(mVal * rhs.mVal / Scale, Scaled); }
         FixedPoint& operator *= (FixedPoint const& rhs) { mVal *= rhs.mVal; mVal /= Scale; return *this; }
-        FixedPoint& operator *= (SrcType const& rhs) { mVal *= rhs; return *this; }
 
-        FixedPoint operator / (FixedPoint const& rhs) const { return FixedPoint((mVal * Scale) / rhs.mVal, Raw); }
-        FixedPoint operator / (SrcType const& rhs) const { return FixedPoint(mVal / rhs, Raw); }
+        FixedPoint operator / (FixedPoint const& rhs) const { return FixedPoint((mVal * Scale) / rhs.mVal, Scaled); }
         FixedPoint& operator /= (FixedPoint const& rhs) { mVal *= Scale; mVal /= rhs.mVal; return *this; }
-        FixedPoint& operator /= (SrcType const& rhs) { mVal /= rhs; return *this; }
 
-        SrcType operator % (SrcType const& rhs) const { return mVal % ((ValueType)rhs * Scale); }
-        FixedPoint& operator %= (SrcType const& rhs) { mVal %= (rhs * Scale); return *this; }
-        SrcType operator % (FixedPoint const& rhs) const { return mVal % rhs.mVal; }
+        FixedPoint operator % (FixedPoint const& rhs) const { return FixedPoint(mVal % rhs.mVal, Scaled); }
         FixedPoint& operator %= (FixedPoint const& rhs) { mVal %= rhs.mVal; return *this; }
-
+        
         // Conversion operators
-        operator SrcType () const { return mVal / Scale; }
-        operator float () const { return mVal / (float) Scale; }
-        operator double () const { return mVal / (double) Scale; }
+        explicit operator SrcType () const { return mVal / Scale; }
+        explicit operator float () const { return mVal / (float) Scale; }
+        explicit operator double () const { return mVal / (double) Scale; }
 
         // Comparison operators
         bool operator == (FixedPoint const& rhs) const { return mVal == rhs.mVal; }
@@ -92,11 +82,14 @@ class FixedPoint {
         bool operator >= (FixedPoint const& rhs) const { return mVal >= rhs.mVal; }
         
         // Other operators
-        // operator bool () { return mVal ? true : false; }
-        FixedPoint operator - () const { return FixedPoint(-mVal, Raw); }
+        explicit operator bool () { return mVal ? true : false; }
+        FixedPoint operator - () const { return FixedPoint(-mVal, Scaled); }
 
         // Get data masked/clamped
         SrcType get () const { return mVal / Scale; }
+        float getFloat() const { return mVal / (float) Scale; }
+        double getDouble() const { return mVal / (double) Scale; }
+
         SrcType get(ValueType const& mask) const { return ( mVal / Scale ) & mask; }
         SrcType get(SrcType minVal, SrcType maxVal) const {
             FixedPoint tmp(*this);
@@ -110,7 +103,6 @@ class FixedPoint {
             mVal = mVal < smax ? mVal : smax;
             return *this;
         }
-
 
         // Set/get raw bytes without being unscaled first
         FixedPoint& setUnscaled(ValueType const& val) { mVal = val; return *this; }

@@ -127,11 +127,11 @@ ColorHsv::ColorHsv(Hsv const& hsv) :
 Color::Rgb ColorHsv::toRgb() const {
     static const auto table = std::vector< Rgb > { { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 0 }, { 0, 1, 1 }, { 0, 0, 1 }, { 1, 0, 1 } };
 
-    Component hn6 = mHsv.h % 1; // [0,1), can do that because hue wraps around anyway
-    hn6 *= 6;                   // [0,6)
-    Component hd = hn6 % 1;     // [0,1), delta between lhi and rhi
-    size_t lhi = hn6.get();     // implicit truncation of fractional part gives 0...5 index into table
-    size_t rhi = (lhi + 1) % 6; // 0...5, handles wrap-around
+    Component hn6 = mHsv.h % 1;     // [0,1), can do that because hue wraps around anyway
+    hn6 *= 6;                       // [0,6)
+    Component hd = hn6 % 1;         // [0,1), delta between lhi and rhi
+    size_t lhi = hn6.get();         // implicit truncation of fractional part gives 0...5 index into table
+    size_t rhi = (lhi + 1) % 6;    // 0...5, handles wrap-around
 
     auto rgbFull = Color::Rgb::lerp(Rgb(table[lhi]), Rgb(table[rhi]), hd);
     auto rgbSat = Color::Rgb::lerp(rgbFull, Rgb( {1, 1, 1} ), Component(1) - mHsv.s);
