@@ -7,6 +7,9 @@
 //
 ////////////////////////////////////////////////////////////////////
 
+#ifndef pnicolor_h
+#define pnicolor_h
+
 #include <cstdint>
 #include <cstddef>
 #include "pnifixedpoint.h"
@@ -25,11 +28,15 @@ class Color {
     public:
         virtual ~Color() = 0;   // Really don't need this, derived classes do no allocation.
 
-        using Component = FixedPoint< int32_t, 5, 10 >;
+        using value_type = int32_t;
+        static const size_t NumDenBits = 5;
+        static const size_t NumDivBits = 10;
+
+        using Component = FixedPoint< value_type, NumDenBits, NumDivBits >;
 
         struct Rgb {
-            Component g;
             Component r;
+            Component g;
             Component b;
 
             static Rgb lerp(Rgb const& lhs, Rgb const& rhs, Component const& tval);
@@ -64,11 +71,18 @@ class Color {
 
 class ColorRgb final : public Color {
     public:
+        ColorRgb() = default;
         ColorRgb(Color const& color);
+        ColorRgb(ColorRgb const& rhs) = default;
         ColorRgb(Rgb const& rgb);
 
         virtual Rgb toRgb() const final;
         virtual Hsv toHsv() const final;
+
+        Rgb* operator->() { return &mRgb; }
+        Rgb const* operator->() const { return &mRgb; }
+
+        ColorRgb& clamp(Rgb const& beg, Rgb const& end);
 
     private:
         Rgb mRgb;
@@ -76,11 +90,18 @@ class ColorRgb final : public Color {
 
 class ColorHsv final : public Color {
     public:
+        ColorHsv() = default;
         ColorHsv(Color const& color);
+        ColorHsv(ColorHsv const& rhs) = default;
         ColorHsv(Hsv const& hsv);
 
         virtual Rgb toRgb() const final;
         virtual Hsv toHsv() const final;
+
+        Hsv* operator->() { return &mHsv; }
+        Hsv const* operator->() const { return &mHsv; }
+
+        ColorHsv& clamp(Hsv const& beg, Hsv const& end);
         
     private:
         Hsv mHsv;
@@ -89,3 +110,5 @@ class ColorHsv final : public Color {
 ////////////////////////////////////////////////////////////////////
 
 } // end namespace pni
+
+#endif // pnicolor_h

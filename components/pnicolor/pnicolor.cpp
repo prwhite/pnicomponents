@@ -47,11 +47,11 @@ Color::Hsv Color::Hsv::lerp(Color::Hsv const& lhs, Color::Hsv const& rhs, Compon
         lhs.v + (rhs.v - lhs.v) * tval };
 }
 
-////////////////////////////////////////////////////////////////////
-
 Color::~Color() {
 
 }
+
+////////////////////////////////////////////////////////////////////
 
 Color::Rgb Color::lerp(ColorRgb const& lhsColor, Color const& rhsColor, Component const& tval) {
     auto lhs = lhsColor.toRgb();    // no conversion, free
@@ -89,27 +89,39 @@ Color::Hsv ColorRgb::toHsv() const {
     Component minVal = min(mRgb.r, min(mRgb.g, mRgb.b));    // [0,1]
     Component vd = maxVal - minVal;                         // [0,1]
 
-    // verify hue is [0.0,1.0] or [0,0x100]
-
     hsv.v = maxVal;                                         // [0,1]
     hsv.s = maxVal == 0 ? maxVal : vd / maxVal;             // [0,1]
 
     if (maxVal == minVal) {
         hsv.h = 0;
     } else {
-        Component mult (1.0f / 3.0f);
+        static const Component One(1);
+        static const Component Two(2);
+        static const Component Three(3);
+        static const Component Six (6);
+        static const Component OneThird(1.0f / 3.0f);
+        static const Component TwoThird(2.0f / 3.0f);
+
         if (maxVal == mRgb.r) {
-            hsv.h = (mRgb.g - mRgb.b) / vd + ( ( mRgb.g < mRgb.b ) ? mult * 3 : Component(0) );
+            hsv.h = ((mRgb.g - mRgb.b) / vd) / Six + One;           // [-1/6, 1/6] + 1
+            hsv.h %= One;                                           // [0, 1) handle wrap around 1 -> 0
         } else if (maxVal == mRgb.g) {
-            hsv.h = (mRgb.b - mRgb.r) / vd + mult * 1;
+            hsv.h = ((mRgb.b - mRgb.r) / vd) / Six + OneThird;      // [-1/6, 1/6] + 1/3
         } else if (maxVal == mRgb.b) {
-            hsv.h = (mRgb.r - mRgb.g) / vd + mult * 2;
+            hsv.h = ((mRgb.r - mRgb.g) / vd) / Six + TwoThird;      // [-1/6, 1/6] + 2/3
         } else {
             hsv.h = 0;
         }
     }
     
     return hsv;
+}
+
+ColorRgb& ColorRgb::clamp(Rgb const& beg, Rgb const& end) {
+    mRgb.r.clamp(beg.r, end.r);
+    mRgb.g.clamp(beg.g, end.g);
+    mRgb.b.clamp(beg.b, end.b);
+    return *this;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -130,8 +142,8 @@ Color::Rgb ColorHsv::toRgb() const {
     Component hn6 = mHsv.h % 1;     // [0,1), can do that because hue wraps around anyway
     hn6 *= 6;                       // [0,6)
     Component hd = hn6 % 1;         // [0,1), delta between lhi and rhi
-    size_t lhi = hn6.get();         // implicit truncation of fractional part gives 0...5 index into table
-    size_t rhi = (lhi + 1) % 6;    // 0...5, handles wrap-around
+    size_t lhi = hn6.get();         // [0,5] implicit truncation of fractional part gives index into table
+    size_t rhi = (lhi + 1) % 6;     // [0,5], handles wrap-around
 
     auto rgbFull = Color::Rgb::lerp(Rgb(table[lhi]), Rgb(table[rhi]), hd);
     auto rgbSat = Color::Rgb::lerp(rgbFull, Rgb( {1, 1, 1} ), Component(1) - mHsv.s);
@@ -144,6 +156,12 @@ Color::Hsv ColorHsv::toHsv() const {
     return mHsv;
 }
 
+ColorHsv& ColorHsv::clamp(Hsv const& beg, Hsv const& end) {
+    mHsv.h.clamp(beg.h, end.h);
+    mHsv.s.clamp(beg.s, end.s);
+    mHsv.v.clamp(beg.v, end.v);
+    return *this;
+}
 
 ////////////////////////////////////////////////////////////////////
 

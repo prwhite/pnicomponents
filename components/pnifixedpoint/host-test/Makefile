@@ -3,11 +3,11 @@
 CXXFLAGS += -I../include -std=c++11 -g
 
 SRCS += ../pnifixedpoint.cpp
-SRCS += host-test.cpp
+SRCS += pnifixedpoint-test.cpp
 
-host-test: $(SRCS)
+pnifixedpoint-test: $(SRCS)
 
 clean:
-	rm host-test
+	rm pnifixedpoint-test
 
 .PHONY: clean
