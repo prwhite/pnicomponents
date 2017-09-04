@@ -29,8 +29,8 @@ class Color {
         virtual ~Color() = 0;   // Really don't need this, derived classes do no allocation.
 
         using value_type = int32_t;
-        static const size_t NumDenBits = 5;
-        static const size_t NumDivBits = 10;
+        static const size_t NumDenBits = 7;
+        static const size_t NumDivBits = 8;
 
         using Component = FixedPoint< value_type, NumDenBits, NumDivBits >;
 
