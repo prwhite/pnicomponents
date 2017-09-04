@@ -124,6 +124,14 @@ ColorRgb& ColorRgb::clamp(Rgb const& beg, Rgb const& end) {
     return *this;
 }
 
+ColorRgb& ColorRgb::clamp() {
+    const auto maxVal = Component::RawOneVal - 1;
+    mRgb.r.clampRaw(0, maxVal);
+    mRgb.g.clampRaw(0, maxVal);
+    mRgb.b.clampRaw(0, maxVal);
+    return *this;
+}
+
 ////////////////////////////////////////////////////////////////////
 
 ColorHsv::ColorHsv(Color const& color) :
@@ -162,6 +170,15 @@ ColorHsv& ColorHsv::clamp(Hsv const& beg, Hsv const& end) {
     mHsv.v.clamp(beg.v, end.v);
     return *this;
 }
+
+ColorHsv& ColorHsv::clamp() {
+    const auto maxVal = Component::RawOneVal - 1;
+    mHsv.h %= maxVal;                   // wrap, not clamp
+    mHsv.s.clampRaw(0, maxVal);
+    mHsv.v.clampRaw(0, maxVal);
+    return *this;
+}
+
 
 ////////////////////////////////////////////////////////////////////
 

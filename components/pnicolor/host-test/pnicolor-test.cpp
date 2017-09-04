@@ -154,6 +154,14 @@ TEST(hsvToRgbSatVal) {
     ASSERT_TRUE(rgb.b.eq(0.0f));
 }
 
+TEST(printHues) {
+    for(float num = 0.0f; num < 1.0f; num += 0.05f) {
+        ColorHsv hsv{ { Color::Component(num), 1, 1 } };
+        Color::Rgb out = hsv.toRgb();
+        cout << "h; r, g, b = " << hex << hsv->h.getFloat () << "; " << out.r.getFloat() << ", " << out.g.getFloat() << ", " << out.b.getFloat() << endl;
+    }
+}
+
 TEST(clamp) {
     static const Color::Component zp25(0.25f);
     static const Color::Component zp50(0.5f);

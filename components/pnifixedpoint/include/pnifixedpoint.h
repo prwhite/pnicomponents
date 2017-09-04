@@ -26,12 +26,15 @@ class FixedPoint {
 
         static_assert((IntBits + FracBits + SignBits) <= TypeBits / 2, "Sizes too big for data type");
 
-        static const Type   RawOneVal = Scale;
-        
     public:
         using ValueType = Type;
         using SrcType = _SrcType;
 
+        // Convenient values and generators
+        static const Type   RawOneVal = Scale;
+        static FixedPoint const& oneVal() { static FixedPoint val(1); return val; }
+        static FixedPoint const& epsVal() { static FixedPoint val(1, Raw); return val;  }
+        
         FixedPoint() : mVal ( 0 ) {}
         FixedPoint(FixedPoint const& rhs) : mVal( rhs.mVal ) {}
 
@@ -41,7 +44,7 @@ class FixedPoint {
         enum ConstructorType { Raw };
         FixedPoint(SrcType const& val, ConstructorType dummy) : mVal ( val ) {}   // Pre-scaled SrcType
     
-    public:
+    public:        
         // Conversion constructors, _currently_ with no range checking.
         FixedPoint(SrcType const& val) : mVal ( val * Scale ) {}                // Unscaled SrcType
         explicit FixedPoint(float const& val) : mVal ( val * Scale ) {}         // Unscaled float
@@ -122,6 +125,12 @@ class FixedPoint {
         FixedPoint& clamp(FixedPoint const& minVal, FixedPoint const& maxVal) {
             mVal = mVal > minVal.mVal ? mVal : minVal.mVal;
             mVal = mVal < maxVal.mVal ? mVal : maxVal.mVal;
+            return *this;
+        }
+
+        FixedPoint& clampRaw(ValueType const& minVal, ValueType const& maxVal) {
+            mVal = mVal > minVal ? mVal : minVal;
+            mVal = mVal < maxVal ? mVal : maxVal;
             return *this;
         }
 

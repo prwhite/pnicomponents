@@ -83,6 +83,7 @@ class ColorRgb final : public Color {
         Rgb const* operator->() const { return &mRgb; }
 
         ColorRgb& clamp(Rgb const& beg, Rgb const& end);
+        ColorRgb& clamp();  // Smart clamp for output to raw type
 
     private:
         Rgb mRgb;
@@ -102,6 +103,7 @@ class ColorHsv final : public Color {
         Hsv const* operator->() const { return &mHsv; }
 
         ColorHsv& clamp(Hsv const& beg, Hsv const& end);
+        ColorHsv& clamp(); // Smart clamp for output to raw type
         
     private:
         Hsv mHsv;
