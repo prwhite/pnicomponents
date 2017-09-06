@@ -114,6 +114,13 @@ TEST(gets) {
     ASSERT_EQ(clampIn.get(0,1),1);
     ASSERT_EQ(clampIn.clamp(0,1).get(), 1);
 
+    u88_t clampDown1(1u);
+    u88_t clampDown0(0u);
+    clampDown1.clampDown();
+    clampDown0.clampDown();
+    ASSERT_EQ(clampDown1.getRaw(), 0xff);
+    ASSERT_EQ(clampDown0.getRaw(), 0x00);
+    
     u88_t roundNum(1.77777777);
     roundNum.truncate<7>();
     u88_t::ValueType raw = roundNum.getRaw();

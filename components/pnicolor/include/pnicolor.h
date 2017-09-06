@@ -84,7 +84,8 @@ class ColorRgb final : public Color {
 
         ColorRgb& clamp(Rgb const& beg, Rgb const& end);
         ColorRgb& clamp();  // Smart clamp for output to raw type
-
+        ColorRgb& clampDown();  // Cheap clamp for output to raw type
+        
     private:
         Rgb mRgb;
 };
@@ -104,6 +105,7 @@ class ColorHsv final : public Color {
 
         ColorHsv& clamp(Hsv const& beg, Hsv const& end);
         ColorHsv& clamp(); // Smart clamp for output to raw type
+        ColorHsv& clampDown(); // Cheap clamp for output to raw type
         
     private:
         Hsv mHsv;

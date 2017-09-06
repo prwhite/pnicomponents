@@ -132,6 +132,13 @@ ColorRgb& ColorRgb::clamp() {
     return *this;
 }
 
+ColorRgb& ColorRgb::clampDown() {
+    mRgb.g.clampDown();
+    mRgb.b.clampDown();
+    mRgb.r.clampDown();
+    return *this;
+}
+
 ////////////////////////////////////////////////////////////////////
 
 ColorHsv::ColorHsv(Color const& color) :
@@ -179,6 +186,13 @@ ColorHsv& ColorHsv::clamp() {
     return *this;
 }
 
+ColorHsv& ColorHsv::clampDown() {
+    const auto maxVal = Component::RawOneVal - 1;
+    mHsv.h %= maxVal;                   // wrap, not clamp
+    mHsv.s.clampDown();
+    mHsv.v.clampDown();
+    return *this;
+}
 
 ////////////////////////////////////////////////////////////////////
 

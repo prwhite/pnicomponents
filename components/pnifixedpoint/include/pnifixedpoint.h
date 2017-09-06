@@ -134,6 +134,13 @@ class FixedPoint {
             return *this;
         }
 
+            // clampDown(1) will convert 0x100 to 0xff and lose precision in the lowest bit.
+            // One less conditional than clampRaw or clamp.
+        FixedPoint& clampDown(ValueType const& val = 1) {
+            mVal = mVal > val ? mVal - val : 0;
+            return *this;
+        }
+
         // Concept: Truncate number by zero-ing out last numBits bits
         // It's a template to provide performance and static range-checking.
         template< size_t numBits >
