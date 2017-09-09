@@ -1,3 +1,6 @@
 [submodule "3p/microtest"]
 	path = 3p/microtest
 	url = https://github.com/torpedro/microtest.h.git
+[submodule "3p/esp32-i2c-ssd1306-oled"]
+	path = 3p/esp32-i2c-ssd1306-oled
+	url = https://github.com/prwhite/esp32-i2c-ssd1306-oled.git
