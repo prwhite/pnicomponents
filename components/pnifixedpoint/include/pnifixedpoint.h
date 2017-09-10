@@ -19,21 +19,27 @@ namespace pni {
 
 template< typename Type, size_t IntBits, size_t FracBits, typename _SrcType = Type >
 class FixedPoint {
-    private:
-        static const Type   Scale = 1 << FracBits;
-        static const size_t SignBits = std::is_unsigned<Type>::value ? 0 : 1;
-        static const size_t TypeBits = sizeof(Type) * 8;
-
-        static_assert((IntBits + FracBits + SignBits) <= TypeBits / 2, "Sizes too big for data type");
-
     public:
         using ValueType = Type;
         using SrcType = _SrcType;
 
+    private:
+        static const ValueType   Scale = 1 << FracBits;
+        static const size_t SignBits = std::is_unsigned<Type>::value ? 0 : 1;
+        static const size_t TypeBits = sizeof(Type) * 8;
+        static const ValueType   Mask = (1 << (IntBits + FracBits)) - 1;
+
+        static_assert((IntBits + FracBits + SignBits) <= TypeBits / 2, "Sizes too big for data type");
+
+    public:
+
         // Convenient values and generators
-        static const Type   RawOneVal = Scale;
-        static FixedPoint const& oneVal() { static FixedPoint val(1); return val; }
-        static FixedPoint const& epsVal() { static FixedPoint val(1, Raw); return val;  }
+        static const ValueType   RawOneVal = Scale;
+        constexpr static FixedPoint const oneVal() { return FixedPoint ((SrcType)1); }
+        constexpr static FixedPoint const epsVal() { return FixedPoint (1, Raw);  }
+        constexpr static FixedPoint const minVal() { return FixedPoint (SignBits ? -1 * Mask : 0, Raw); }
+        constexpr static FixedPoint const maxVal() { return FixedPoint (Mask, Raw); }
+        constexpr static FixedPoint const maskVal() { return FixedPoint (Mask, Raw); }
         
         FixedPoint() : mVal ( 0 ) {}
         FixedPoint(FixedPoint const& rhs) : mVal( rhs.mVal ) {}
@@ -42,19 +48,19 @@ class FixedPoint {
         // Internal constructor for raw values.
         // Uses dumb enum to make sure right constructor is invoked.
         enum ConstructorType { Raw };
-        FixedPoint(SrcType const& val, ConstructorType dummy) : mVal ( val ) {}   // Pre-scaled SrcType
+        FixedPoint(SrcType val, ConstructorType dummy) : mVal ( val ) {}   // Pre-scaled SrcType
     
     public:        
         // Conversion constructors, _currently_ with no range checking.
-        FixedPoint(SrcType const& val) : mVal ( val * Scale ) {}                // Unscaled SrcType
-        explicit FixedPoint(float const& val) : mVal ( val * Scale ) {}         // Unscaled float
-        explicit FixedPoint(double const& val) : mVal ( val * Scale ) {}        // Unscaled double
+        FixedPoint(SrcType val) : mVal ( val * Scale ) {}                // Unscaled SrcType
+        explicit FixedPoint(float val) : mVal ( val * Scale ) {}         // Unscaled float
+        explicit FixedPoint(double val) : mVal ( val * Scale ) {}        // Unscaled double
 
         // Assignment operators
-        FixedPoint& operator = (SrcType const& rhs) { mVal = rhs * Scale; return *this; }
+        FixedPoint& operator = (SrcType rhs) { mVal = rhs * Scale; return *this; }
         FixedPoint& operator = (FixedPoint const& rhs) { mVal = rhs.mVal; return *this; }
-        FixedPoint& operator = (float const& rhs) { mVal = rhs * Scale; return *this; }
-        FixedPoint& operator = (double const& rhs) { mVal = rhs * Scale; return *this; }
+        FixedPoint& operator = (float rhs) { mVal = rhs * Scale; return *this; }
+        FixedPoint& operator = (double rhs) { mVal = rhs * Scale; return *this; }
         
         // Arithmetic operations
         FixedPoint operator + (FixedPoint const& rhs) const { return FixedPoint(mVal + rhs.mVal, Raw); }
@@ -80,16 +86,16 @@ class FixedPoint {
         // Comparison operators
         bool operator == (FixedPoint const& rhs) const { return mVal == rhs.mVal; }
         bool operator != (FixedPoint const& rhs) const { return ! (*this == rhs); }
-        bool operator == (SrcType const& rhs) const { return mVal == rhs * Scale; }
-        bool operator == (float const& rhs) const { return mVal == rhs * Scale; }
-        bool operator == (double const& rhs) const { return mVal == rhs * Scale; }
+        bool operator == (SrcType rhs) const { return mVal == rhs * Scale; }
+        bool operator == (float rhs) const { return mVal == rhs * Scale; }
+        bool operator == (double rhs) const { return mVal == rhs * Scale; }
 
-        bool eq (float const& compare, float const& eps = 0.01) const {
+        bool eq (float compare, float eps = 0.01) const {
             float val = this->getFloat();
             return ((val + eps) > compare) && ((val - eps) < compare);
         }
 
-        bool eq (double const& compare, double const& eps = 0.01) const {
+        bool eq (double compare, double eps = 0.01) const {
             double val = this->getDouble();
             return ((val + eps) > compare) && ((val - eps) < compare);
         }
@@ -114,7 +120,7 @@ class FixedPoint {
             tmp.clamp(minVal, maxVal);
             return tmp.get();
         }
-        FixedPoint& clamp(SrcType const& minVal, SrcType const& maxVal) {
+        FixedPoint& clamp(SrcType minVal, SrcType maxVal) {
             ValueType smin = minVal * Scale;
             ValueType smax = maxVal * Scale;
             mVal = mVal > smin ? mVal : smin;
@@ -167,6 +173,20 @@ class FixedPoint {
     private:
         Type mVal;
 };
+
+// Const static definitions.  Need these because currently most of the 
+// FixedPoint methods take const refs which needs a real definition for ODR.
+template< typename Type, size_t IntBits, size_t FracBits, typename _SrcType >
+const Type FixedPoint< Type, IntBits, FracBits, _SrcType>::Scale;
+
+template< typename Type, size_t IntBits, size_t FracBits, typename _SrcType >
+const size_t FixedPoint< Type, IntBits, FracBits, _SrcType>::SignBits;
+
+template< typename Type, size_t IntBits, size_t FracBits, typename _SrcType >
+const size_t FixedPoint< Type, IntBits, FracBits, _SrcType>::TypeBits;
+
+template< typename Type, size_t IntBits, size_t FracBits, typename _SrcType >
+const Type FixedPoint< Type, IntBits, FracBits, _SrcType>::Mask;
 
 // Some predefined versions of the template.
 using FixedPointU3288 = FixedPoint< uint32_t, 8, 8 >;

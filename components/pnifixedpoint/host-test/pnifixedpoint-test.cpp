@@ -50,6 +50,10 @@ TEST(basicArithmetic) {
     s78_t pos(1);
     s78_t neg(-pos);
     ASSERT_EQ(neg.get(), -1);
+
+    s78_t val(30);
+    val -= s78_t(-10);
+    ASSERT_EQ(val.get(), 40);
 }
 
 TEST(basicArithmeticAssigment) {
@@ -128,10 +132,32 @@ TEST(gets) {
     ASSERT_EQ(roundNum.getFloat(), 1.5f);
 }
 
-TEST(rawValues) {
+TEST(constants) {
     u88_t u880(1u);
-
     ASSERT_EQ(u880.getRaw(), 0x100);
+
+    cout << "u88_t::Mask = " << hex << u88_t::maskVal().getRaw() << endl;
+    cout << "s78_t::Mask = " << hex << s78_t::maskVal().getRaw() << endl;
+    
+    u88_t one88 = u88_t::oneVal();
+    u88_t min88 = u88_t::minVal();
+    u88_t max88 = u88_t::maxVal();
+
+    cout << "max88 min max = " << min88.getFloat() << ", " << max88.getFloat() << endl;
+
+    ASSERT_EQ(one88.getRaw(), 0x100);
+    ASSERT_EQ(min88.getRaw(), 0x00);
+    ASSERT_EQ(max88.getRaw(), 0xffff);
+
+    s78_t one78 = s78_t::oneVal();
+    s78_t min78 = s78_t::minVal();
+    s78_t max78 = s78_t::maxVal();
+
+    cout << "max78 min max = " << min78.getFloat() << ", " << max78.getFloat() << endl;
+    
+    ASSERT_EQ(one78.getRaw(), 0x100);
+    ASSERT_EQ(min78.getRaw(), -1 * 0x7fff);
+    ASSERT_EQ(max78.getRaw(), 0x7fff);
 }
 
 TEST_MAIN();

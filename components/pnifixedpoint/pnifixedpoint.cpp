@@ -29,6 +29,7 @@ Fp1634 fp1634;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
 void testTemplateExpansion() {
     fpu3288 += fpu3288;
@@ -57,6 +58,9 @@ void testTemplateExpansion() {
     bool val10 = tmp < fpu3288;
     auto val11 = tmp.get(0xff);
     auto val12 = tmp.get(0,255);
+
+    // random
+    auto maxVal = Fpu3288::maxVal();
 }
 #pragma GCC diagnostic pop
 
