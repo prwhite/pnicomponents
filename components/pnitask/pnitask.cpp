@@ -33,7 +33,7 @@ Task::~Task() {
 
 bool Task::start() {
     ESP_LOGV(TAG, "Task::start beg");
-    BaseType_t ret = xTaskCreate(taskFunc, mName.c_str(), 1000, this, 1, &mTask); // TODO: Fix magic numbers
+    BaseType_t ret = xTaskCreate(taskFunc, mName.c_str(), mStackSize, this, 1, &mTask); // TODO: Fix magic numbers
 
     if( ret != pdPASS) {
         return false;
@@ -51,7 +51,9 @@ void Task::cancel() {
 }
 
 void Task::taskFunc( void* param ) {
+    ESP_LOGV(TAG, "Task::taskFunc beg");
     Task* self = reinterpret_cast< Task* > ( param );
+    ESP_LOGV(TAG, "Task::start before taskMethod with self = %p", self);
     self->taskMethod();
 }
 
@@ -71,10 +73,12 @@ void Task::delayTicks(TickType_t ticks) {
 
 void Task::lock() {
     // TODO
+    ESP_LOGE(TAG, "lock not implemented yet");
 }
 
 void Task::unlock() {
     // TODO
+    ESP_LOGE(TAG, "unlock not implemented yet");
 }
 
 Task* Task::createAndStart(std::string const& name) {

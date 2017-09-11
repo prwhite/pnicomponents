@@ -67,7 +67,7 @@ class GraphSsd1306Base : public Graph::Renderer {
 
         // virtual void draw(Graph* graph) = 0;
         virtual void clear(Graph* graph) {
-            mOled->draw_rectangle(
+            mOled->fill_rectangle(
                 graph->mViewport.mXOrig,
                 graph->mViewport.mYOrig,
                 graph->mViewport.mXSize,
@@ -110,7 +110,9 @@ class GraphSsd1306Base : public Graph::Renderer {
         }
 
         void refresh(bool force = true) {
-            mOled->refresh(force);
+            if(mOled) {
+                mOled->refresh(force);
+            }
         }
 
             // Utility methods

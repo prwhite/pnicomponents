@@ -20,6 +20,10 @@ class Task {
         Task(std::string const& name);
         virtual ~Task();
 
+            // Can only change stack size before calling `start`.
+        void setStackSize(size_t val) { mStackSize = val; }
+        size_t getStackSize() const { return mStackSize; }
+
         bool start();
         virtual void cancel();  // Not called by destructor, should be called at end of `taskMethod`.
 
@@ -48,6 +52,7 @@ class Task {
     private:
         std::string mName = "Unnamed task";
         TaskHandle_t mTask = 0;
+        size_t mStackSize = 2000;
 
 };
 
