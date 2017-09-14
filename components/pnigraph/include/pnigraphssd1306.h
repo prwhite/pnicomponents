@@ -66,7 +66,7 @@ class GraphSsd1306Base : public Graph::Renderer {
         ssd1306_color_t mDrawColor = WHITE;
 
         // virtual void draw(Graph* graph) = 0;
-        virtual void clear(Graph* graph) {
+        virtual void clearViewport(Graph* graph) {
             mOled->fill_rectangle(
                 graph->mViewport.mXOrig,
                 graph->mViewport.mYOrig,
@@ -93,8 +93,8 @@ class GraphSsd1306Base : public Graph::Renderer {
             if (mOled && mOled->init())
             {
                 ESP_LOGI(TAG, "OLED initialized successfully");
-                mOled->clear();
-                mOled->refresh(true);
+                // mOled->clear();
+                // mOled->refresh(true);
             } else {
                 ESP_LOGE(TAG, "OLED failed to initialize");
                 delete mOled;
@@ -109,9 +109,15 @@ class GraphSsd1306Base : public Graph::Renderer {
             }
         }
 
-        void refresh(bool force = true) {
+        virtual void refresh(Graph* graph, bool force = false) {
             if(mOled) {
                 mOled->refresh(force);
+            }
+        }
+
+        virtual void clearAll(Graph* graph) {
+            if(mOled) {
+                mOled->clear();
             }
         }
 

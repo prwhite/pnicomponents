@@ -67,7 +67,9 @@ class Graph {
         class Renderer {
             public:
                 virtual void draw(Graph* graph) = 0;
-                virtual void clear(Graph* graph) = 0;
+                virtual void clearViewport(Graph* graph) = 0;
+                virtual void clearAll(Graph* graph) = 0;
+                virtual void refresh(Graph* graph, bool force = false) = 0;
         };
 
             // Dirty, dirty public data
@@ -85,8 +87,16 @@ class Graph {
             mRenderer->draw(this);
         }
 
-        void clear() {
-            mRenderer->clear(this);
+        void clearViewport() {
+            mRenderer->clearViewport(this);
+        }
+
+        void clearAll() {
+            mRenderer->clearAll(this);
+        }
+
+        void refresh(bool force = false) {
+            mRenderer->refresh(this, force);
         }
 
         using MapFunc = std::function<void(size_t index, Point const& point)>;
