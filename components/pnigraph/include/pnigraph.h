@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <cassert>
+#include <algorithm>
 #include <functional>
 #include "pnifixedpoint.h"
 #include "esp_log.h"
@@ -41,13 +42,13 @@ class Graph {
             Datum mSrcMax = 0;
             Datum mCenter = 0;
 
-            DataPair getMinMax() {
-                DataPair ret { Datum::maxVal(), Datum::minVal() };
-                for(auto datum : mData) {
-                    if (datum < ret.first) { ret.first = datum; }
-                    if(datum > ret.second) { ret.second = datum; }
-                }
-                return ret;
+            DataPair getMinMax() const {
+                auto mm = std::minmax_element(mData.begin(), mData.end());
+                return DataPair(*(mm.first), *(mm.second));
+            }
+
+            void setRange(Datum const& minVal, Datum const& centerVal, Datum const& maxVal) {
+                mSrcMin = minVal; mCenter = centerVal; mSrcMax = maxVal;
             }
 
             void updateDynamicRange() {
@@ -79,9 +80,19 @@ class Graph {
         Renderer* mRenderer = 0;
         bool mUseDynamicRange = false;
 
+        template< typename Type >
+        void resize(size_t num, Type yVal) {
+            mXAxis.mData.resize(num);
+            mYAxis.mData.resize(num, yVal);
+            for(size_t index = 0; index < num; ++index) {
+                Type val = index;
+                mXAxis.mData[ index ] = val;
+            }
+        }
+
         void draw() {
             if( mUseDynamicRange ) {
-                mXAxis.updateDynamicRange();
+                // mXAxis.updateDynamicRange();
                 mYAxis.updateDynamicRange();
             }
             mRenderer->draw(this);
@@ -108,6 +119,8 @@ class Graph {
             }
         }
 
+            // TODO: Should just have utility function that xforms one dimension,
+            // and re-use that for x and y
         bool xformPoint(Point& point) {
             bool ret = true;
 

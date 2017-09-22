@@ -32,6 +32,8 @@ class Fft {
         void updateSwap(SData& samples) { mSamples.swap(samples); }
 
         void doFft();
+
+        SData const& getBuckets() const { return mReturn; }
         
     protected:
 

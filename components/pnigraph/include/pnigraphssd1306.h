@@ -62,6 +62,8 @@ class GraphSsd1306Base : public Graph::Renderer {
             }
         }
 
+        OLED* getOled() const { return mOled; }
+
         ssd1306_color_t mClearColor = BLACK;
         ssd1306_color_t mDrawColor = WHITE;
 
@@ -189,11 +191,11 @@ class GraphSsd1306BarLines : public GraphSsd1306Base {
         virtual void drawOne(Graph* graph, Point const& dstOrig) {
             auto src(dstOrig);
             getStartPos(graph, src);
-            graph->xformPoint(src);
-
+            if(! graph->xformPoint(src)) return; // EARLY RETURN!!!
+            
             auto dst(dstOrig);
-            graph->xformPoint(dst);            
-
+            if(! graph->xformPoint(dst)) return; // EARLY RETURN!!!
+            
             if(mOrientation == Vertical) {
                 draw_vline(src, dst);
             } else {
@@ -213,12 +215,12 @@ public:
 
     virtual void drawOne(Graph* graph, Point const& dstOrig) {
         auto src(dstOrig);
-        graph->xformPoint(src);
+        if(! graph->xformPoint(src)) return; // EARLY RETURN!!!
 
         auto dst(dstOrig);        
         getStartPos(graph, dst);
-        graph->xformPoint(dst);
-
+        if(! graph->xformPoint(dst)) return; // EARLY RETURN!!!
+        
         if(mOrientation == Vertical) {
             dst.mXVal += mWidth;
         } else {
