@@ -4,3 +4,6 @@
 [submodule "3p/esp32-i2c-ssd1306-oled"]
 	path = 3p/esp32-i2c-ssd1306-oled
 	url = https://github.com/prwhite/esp32-i2c-ssd1306-oled.git
+[submodule "3p/fix_fft"]
+	path = 3p/fix_fft
+	url = https://github.com/prwhite/FFT.git

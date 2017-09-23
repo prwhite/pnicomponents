@@ -14,6 +14,8 @@ Functionality covered by the components (**pretty much all of these are TODOs**)
 * Processing:
     * `Task`: ![Done](src/label-done.png) ![Untested](src/label-untested.png) A simple wrapper around FreeRTOS `xTaskCreate` and related functions \[[more](http://www.freertos.org/a00125.html)\].  Also included:
         * `TaskLambda`: ![Done](src/label-done.png) ![Untested](src/label-untested.png) A task that takes a C++11 lambda for the task callback rather than requiring the developer to derive a class and override the virtual task method.
+    * `Fft`: ![Done](src/label-done.png) ![Untested](src/label-untested.png) An embedded-optimized FFT.
+        * Using fix_fft originally from [here](https://github.com/fmilburn3/FFT), but the basic implementation is all over the internet.
     * `Queue`: A thread safe FIFO.  Thread safe only for push and pop.
     * `LambdaQueue`:  A queue for lambdas to be passed safely from one task to another.
     * `Actor`: A task with an associated lambda queue.
