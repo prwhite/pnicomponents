@@ -101,7 +101,7 @@ class Fft {
             // mReal and mImaginary will contain the output.
             //  Only first half of arrays ( < index Num / 2) contain valid data.
         void doFft() {
-                // zero out arrays
+                // zero out imaginary component
             mImaginary.assign(Num, 0);
         
                 // int fix_fft(int fr[], int fi[], int m, int inverse);
@@ -110,13 +110,19 @@ class Fft {
 
             // After `doFtt`, convert real and imaginary bits to real-only.
             //  Only first half of array ( < index Num / 2) contain valid data.
-        template< bool distSqrOut = false >
+        template< bool doSqrRoot = true >
         void convToReal() {
-            for(size_t num = 0; num < Num >> 1; ++num) {
-                mReal[ num ] = mReal[ num ] * mReal[ num ] + mImaginary[ num ] * mImaginary[ num ];
-                if(! distSqrOut) {
-                    mReal[ num ] = SquareRootRounded(mReal[ num ]);
+            for(size_t num = 0; num < NumOut; ++num) {
+                    // do math using 32 bits so we don't overflow
+                int32_t rval = (int32_t) mReal[ num ];
+                int32_t ival = (int32_t) mImaginary[ num ];
+                int32_t out = rval * rval + ival * ival;
+                if (doSqrRoot) {
+                    out = SquareRootRounded(out);
                 }
+                    // out is [-0x7ffe, 0x7ffe]
+                    // mReal is [-0x7fff, 0x7fff]
+                mReal[ num ] = out; // Can overrun... hmmm.
             }
         }
 

@@ -51,6 +51,13 @@ class Graph {
                 mSrcMin = minVal; mCenter = centerVal; mSrcMax = maxVal;
             }
 
+            void fillAsIndices(Datum start = 0) {
+                auto end = mData.size();
+                for(auto num = 0; num < end; ++num ) {
+                    mData[ num ] = start + num;
+                }
+            }
+
             void updateDynamicRange() {
                 auto range = getMinMax();
                 mSrcMin = range.first;
@@ -84,14 +91,11 @@ class Graph {
         void resize(size_t num, Type yVal) {
             mXAxis.mData.resize(num);
             mYAxis.mData.resize(num, yVal);
-            for(size_t index = 0; index < num; ++index) {
-                Type val = index;
-                mXAxis.mData[ index ] = val;
-            }
+            mXAxis.fillAsIndices();
         }
 
         void draw() {
-            if( mUseDynamicRange ) {
+            if(mUseDynamicRange) {
                 // mXAxis.updateDynamicRange();
                 mYAxis.updateDynamicRange();
             }
