@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "pffft.h"
+#include "fix_fft.h"
 
 ////////////////////////////////////////////////////////////////////
 
@@ -90,9 +91,13 @@ class Fft {
     protected:
             // Utility method.
         template< class Src, class Dst >
-        void doCopy(Src const& src, Dst& dst, size_t srcStride =1, size_t dstStride = 1) {
-            for(auto num = 0; num < Num; ++num) {
-                dst[ num * dstStride ] = src[ num * srcStride ];
+        void doCopy(Src const& src, Dst& dst, int srcStride = 1, int dstStride = 1, int srcOffset = 0, int dstOffset = 0) {
+            int end = dstStride > 0 ? 
+                    (dst.size() - dstOffset) / dstStride :
+                    (dst.size() - dstOffset) / -dstStride;
+
+            for(auto num = 0; num < end; ++num) {
+                dst[ num * dstStride + dstOffset ] = src[ num * srcStride + srcOffset];
             }
         }
     
@@ -239,8 +244,50 @@ class FftPffft : public Fft< Pow > {
             pffft_transform_ordered(mSetup, &mIn[ 0 ], &mOut[ 0 ], 0, PFFFT_FORWARD);
             this->doCopy(mOut, mReal);
         }
+};
 
+template< size_t Pow >
+class FftFix : public Fft< Pow > {
+        using Base = Fft< Pow >;
+    public:
+            // Need to promote the things we get from the template base class.
+        using Base::Num;
+        using Base::NumOut;
+        using Base::Num2;
 
+        using typename Base::SDatum;
+        using typename Base::SData;
+
+    private:
+        SData mImaginary;
+        
+    public:
+
+        using Base::mReal;
+        
+        FftFix() {
+            mReal.resize(Num);
+            mImaginary.resize(Num);
+        }
+
+        virtual ~FftFix() {
+            // Currently no-op
+        }
+
+        virtual void doFft() {
+            mImaginary.assign(Num, 0);
+            
+                // int fix_fft(int fr[], int fi[], int m, int inverse);
+            fix_fft(&mReal[ 0 ], &mImaginary[ 0 ], Num, 0);
+
+            int realDstOff = mReal.size() - 2;
+            int realSrcOff = (mReal.size() >> 1) - 1;
+            this->doCopy(mReal, mReal, -2, -1, realDstOff, realSrcOff);
+
+            int imagDstOff = mReal.size() - 1;
+            int imagSrcOff = (mReal.size() >> 1) - 1;
+            this->doCopy(mReal, mImaginary, -2, -1, imagDstOff, imagSrcOff);
+        }
 };
 
 ////////////////////////////////////////////////////////////////////
