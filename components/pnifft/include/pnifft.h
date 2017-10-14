@@ -89,6 +89,8 @@ class Fft {
         SData mReal;                // Input samples.   PUBLIC DATA!!!  Don't resize!!!
         
     protected:
+        constexpr const static char* TAG = "pnifft";
+
             // Utility method.
         template< class Src, class Dst >
         void doCopy(Src const& src, Dst& dst, int srcStride = 1, int dstStride = 1, int srcOffset = 0, int dstOffset = 0) {
@@ -132,6 +134,8 @@ class Fft {
     public:
 
         virtual ~Fft() {}
+
+            // Output format will be [ririri]
         virtual void doFft() = 0;
 
             // From: https://www.edn.com/electronics-news/4383713/Windowing-Functions-Improve-FFT-Results-Part-I
@@ -176,6 +180,8 @@ class Fft {
             // After `doFtt`, convert real and imaginary bits to real-only.
             //  Only first half of array ( < index Num / 2) contain real data,
             //  the rest is set to zero.
+            // Input format is [ririri]
+            // Output format is [rrr000]
         template< bool doSqrRoot = true >
         void convToReal() {
             for(size_t num = 0; num < Num; num += 2) {
@@ -188,7 +194,7 @@ class Fft {
                 }
                     // out is [-0x7ffe, 0x7ffe]
                     // mReal is [-0x7fff, 0x7fff]
-                mReal[ num / 2 ] = out; // Can overrun... hmmm.
+                mReal[ num / 2 ] = out;
             }
             for(size_t num = NumOut; num < Num; ++num) {
                 mReal[ num ] = 0;
@@ -238,7 +244,7 @@ class FftPffft : public Fft< Pow > {
 
             // Does fwd fft.
             // mReal contains the input and will contain the output.
-            // Output will be interleaved real and imaginary components.
+            // Output will be [ririri]
         virtual void doFft() {
             this->doCopy(mReal, mIn);
             pffft_transform_ordered(mSetup, &mIn[ 0 ], &mOut[ 0 ], 0, PFFFT_FORWARD);
@@ -260,7 +266,7 @@ class FftFix : public Fft< Pow > {
 
     private:
         SData mImaginary;
-        
+
     public:
 
         using Base::mReal;
@@ -274,6 +280,7 @@ class FftFix : public Fft< Pow > {
             // Currently no-op
         }
 
+            // Output format will be [ririri]
         virtual void doFft() {
             mImaginary.assign(Num, 0);
             
@@ -287,6 +294,87 @@ class FftFix : public Fft< Pow > {
             int imagDstOff = mReal.size() - 1;
             int imagSrcOff = (mReal.size() >> 1) - 1;
             this->doCopy(mReal, mImaginary, -2, -1, imagDstOff, imagSrcOff);
+        }
+};
+
+    // Inspired by: http://blog.podkalicki.com/attiny13-dance-lights-with-fft/
+template< size_t Pow >
+class FftTiny : public Fft< Pow > {
+        using Base = Fft< Pow >;
+    public:
+            // Need to promote the things we get from the template base class.
+        using Base::Num;
+        using Base::NumOut;
+        using Base::Num2;
+
+        using typename Base::SDatum;
+        using typename Base::SData;
+
+        SData mCoefficients;
+
+    private:
+        static const SDatum Mult = 0x20;
+        static const SDatum Div = 5;
+    
+    public:
+
+        using Base::mReal;
+        
+        FftTiny() {
+            mReal.resize(Num);
+            mCoefficients.resize(Num);
+            initCoefficients();
+        }
+
+        virtual ~FftTiny() {
+            // Currently no-op
+        }
+
+            // Output format is [ririri...]
+            // This algorithm does not deal with imaginary at all, so
+            //  doing a `convToReal` after will just rearrange components
+            //  in the right order.
+        virtual void doFft() {
+            doTinyFft();
+        }
+
+    private:
+        void initCoefficients() {
+
+                // From the original code:
+                // const int8_t W[N] = {10, 4, -5, -9, -4, 5};
+                // Note that it doesn't quite complete a cos, 
+                //  so below, we only go through 1.75 of a circle.
+
+            const float Pi = Base::getPi();
+            const float div = 1.75f * Pi / (Num - 1.0f);
+
+            for(size_t num = 0; num < Num; ++num) {
+                mCoefficients[ num ] = (float) Mult * cosf(num * div);
+                ESP_LOGI(Base::TAG, "coefficient %d = %d", num, mCoefficients[ num ]);
+            }
+        }
+
+            // Output format is [ririri]
+        void doTinyFft() {
+            SData re(Num, 0);
+
+            for (size_t k = 0; k <= (Num >> 1); ++k) {
+                SDatum a = 0;
+                for (size_t n = 0; n < Num; ++n) {
+                    re[k] += mCoefficients[a % Num] * mReal[n];
+                    a += k;
+                }
+                if (re[k] < 0)
+                    re[k] = -(re[k] + 1);
+            }
+
+                // Switch from [rrr000] to [r0r0r0]
+                // Also scale back
+            for(size_t num = 0; num < NumOut; ++num) {
+                mReal[ num * 2 ] = re[ num ];
+                mReal[ num * 2 + 1 ] = 0;
+            }
         }
 };
 
