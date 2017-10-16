@@ -71,16 +71,6 @@ void Task::delayTicks(TickType_t ticks) {
     vTaskDelay(ticks);
 }
 
-void Task::lock() {
-    // TODO
-    ESP_LOGE(TAG, "lock not implemented yet");
-}
-
-void Task::unlock() {
-    // TODO
-    ESP_LOGE(TAG, "unlock not implemented yet");
-}
-
 Task* Task::createAndStart(std::string const& name) {
     auto task = new Task(name);
     task->start();

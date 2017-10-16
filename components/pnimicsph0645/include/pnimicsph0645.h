@@ -23,10 +23,6 @@ namespace pni {
 
 ////////////////////////////////////////////////////////////////////
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma GCC diagnostic ignored "-fpermissive"
-
     // With some help from here: https://www.esp32.com/viewtopic.php?t=1756
 class MicSph0645 {
         constexpr static const char* TAG = "MicSph0645";
@@ -57,8 +53,6 @@ class MicSph0645 {
             ESP_LOGI(TAG, "starting to configure i2s input for mic");
 
             mConfig = config;
-            
-            static const int i2s_num = config.mI2sNum; // i2s port number
             
             static const i2s_config_t i2s_config = {
                  .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX),
@@ -130,11 +124,9 @@ class MicSph0645 {
             return ret;
         }
 
-    private:
+    protected:
         Config mConfig;
 };
-
-#pragma GCC diagnostic pop
 
 ////////////////////////////////////////////////////////////////////
 
