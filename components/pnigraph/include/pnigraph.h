@@ -37,6 +37,12 @@ class Graph {
         };
 
         struct Axis {
+            enum DynamicRange {
+                Static,
+                Dynamic,
+                DynamicPeak
+            };
+
             Data mData;
             Datum mSrcMin = 0;
             Datum mSrcMax = 0;
@@ -58,10 +64,15 @@ class Graph {
                 }
             }
 
-            void updateDynamicRange() {
+            void updateDynamicRange(DynamicRange type) {
                 auto range = getMinMax();
-                mSrcMin = range.first;
-                mSrcMax = range.second;
+                if(type == Dynamic) {
+                    mSrcMin = range.first;
+                    mSrcMax = range.second;
+                } else if (type == DynamicPeak) {
+                    mSrcMin = std::min(mSrcMin, range.first);
+                    mSrcMax = std::max(mSrcMax, range.second);
+                }
             }
         };
 
@@ -85,7 +96,7 @@ class Graph {
         Axis mYAxis;
         Viewport mViewport;
         Renderer* mRenderer = 0;
-        bool mUseDynamicRange = false;
+        Axis::DynamicRange mUseDynamicRange = Axis::Static;
 
         template< typename Type >
         void resize(size_t num, Type yVal) {
@@ -95,9 +106,9 @@ class Graph {
         }
 
         void draw() {
-            if(mUseDynamicRange) {
+            if(mUseDynamicRange != Axis::Static) {
                 // mXAxis.updateDynamicRange();
-                mYAxis.updateDynamicRange();
+                mYAxis.updateDynamicRange(mUseDynamicRange);
             }
             mRenderer->draw(this);
         }

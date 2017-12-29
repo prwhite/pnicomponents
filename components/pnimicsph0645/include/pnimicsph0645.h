@@ -36,7 +36,7 @@ class MicSph0645 {
             size_t mChannels;           // TODO: For i2s_channel_t or i2s_channel_fmt_t?
             size_t mBitsPerSample;      // 8, 16, 24, 32
             size_t mBufCount;
-            size_t mBufLen;
+            size_t mBufLen;             // if mono, number of samples; if stereo, number of sample pairs
 
             int mBckPin;
             int mWsPin;
@@ -49,6 +49,17 @@ class MicSph0645 {
         }
 
 
+            // Example runtime output from esp32 I2S library.
+            // Note that specified dma_buf_len was 64, but resulted in 128.
+            // Assuming that it's 64 samples = 128 bytes.  
+            // That's unexpected from the sparse documentation.
+            // For 16, 64, short, 1 chan
+            //  I (1785) I2S: DMA Malloc info, datalen=blocksize=128, dma_buf_count=16
+            //  I (1792) I2S: Req RATE: 22050, real rate: 22321.000, BITS: 16, CLKM: 28, BCK: 8, MCLK: 5644983.462, SCLK: 714272.000000, diva: 64, divb: 22
+            //  I (1805) I2S: Req RATE: 22050, real rate: 22321.000, BITS: 16, CLKM: 28, BCK: 8, MCLK: 5644983.462, SCLK: 714272.000000, diva: 64, divb: 22
+            // For 8, 64, int, 2 chan:
+            //  I (693) I2S: DMA Malloc info, datalen=blocksize=512, dma_buf_count=8
+            // So it looks like dma size is dma_buf_count * dma_buf_len * Bps * channels.
         bool init(Config const& config) {
             ESP_LOGI(TAG, "starting to configure i2s input for mic");
 
@@ -58,7 +69,7 @@ class MicSph0645 {
                  .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX),
                  .sample_rate = (int)config.mSampleRate,
                  .bits_per_sample = (i2s_bits_per_sample_t)config.mBitsPerSample, // I2S_BITS_PER_SAMPLE_16BIT,
-                 .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+                 .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
                  .communication_format = (i2s_comm_format_t) (I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB),
                  .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1, // high interrupt priority
                  .dma_buf_count = (int)config.mBufCount,
@@ -82,10 +93,10 @@ class MicSph0645 {
                 return false;
             }
         
-            if(i2s_set_clk(getPort(), mConfig.mSampleRate, (i2s_bits_per_sample_t)config.mBitsPerSample, I2S_CHANNEL_MONO) != ESP_OK) {
-                ESP_LOGE(TAG, "failed to set clk values");
-                return false;
-            }
+            // if(i2s_set_clk(getPort(), mConfig.mSampleRate, (i2s_bits_per_sample_t)config.mBitsPerSample, I2S_CHANNEL_MONO) != ESP_OK) {
+            //     ESP_LOGE(TAG, "failed to set clk values");
+            //     return false;
+            // }
 
             ESP_LOGI(TAG, "successfully configured i2s input for mic");
             return true;
@@ -99,27 +110,56 @@ class MicSph0645 {
             return mConfig;
         }
 
+    private:
+            // Helper methods
         i2s_port_t getPort() const {
             return (i2s_port_t)mConfig.mI2sNum;
         }
 
         size_t getSampleByteSize() const {
-            return mConfig.mChannels * mConfig.mBitsPerSample / 8;
+            return mConfig.mBitsPerSample / 8;
         }
 
         size_t getDmaByteSize() const {
-            return mConfig.mBufCount * mConfig.mBufLen;
+            return mConfig.mBufCount * mConfig.mBufLen * getSampleByteSize() * mConfig.mChannels;
         }
 
         size_t getSamplesPerDmaByteSize() const {
             return getDmaByteSize() / getSampleByteSize();
         }
 
-        using Bytes = std::vector< char >;
-        int readBytes(Bytes& bytes) {
-            bytes.resize(getDmaByteSize());
-            auto ret = i2s_read_bytes(getPort(), &bytes[ 0 ], bytes.size(), (portTickType)portMAX_DELAY);
-            bytes.resize(ret);
+    public:
+            // When doing stereo, samples will be [rlrlrl...]
+            // but, with only one mic, the lefts are all zero.
+            // So, this packs the samples [rrr] and compacts the
+            // storage to half the size.
+        template< class VectorType >        // must be a vector
+        void reorderSamples(VectorType& vec) {
+            size_t end = vec.size() / 2;  // Only half the data is good
+            for(size_t num = 0; num < end; ++num) {
+                vec[ num ] = vec[ num * 2];
+            }
+            vec.resize(end);
+        }
+
+            // TODO: Must document this complicated method!
+        template< class VectorType >    // must be a vector
+        int readSamples(VectorType& vec) {
+            const size_t ValSize = getSampleByteSize();
+            const size_t SamplesInBuffer = getSamplesPerDmaByteSize();
+            const size_t DmaBufferSize = getDmaByteSize();
+
+            static_assert(sizeof(typename VectorType::value_type)>0, "VectoryType doesn't seem to be a vector");
+
+            vec.resize(SamplesInBuffer);
+
+            auto ret = i2s_read_bytes(getPort(), (char*) &vec[ 0 ], DmaBufferSize, (portTickType)portMAX_DELAY);
+
+            vec.resize(ret / ValSize);
+
+            for(auto& val : vec) {
+                val <<= 5;              // TODO: Only works for 32 bps
+            }
 
             return ret;
         }

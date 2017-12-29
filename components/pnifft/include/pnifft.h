@@ -75,6 +75,9 @@ namespace pni {
 
 ////////////////////////////////////////////////////////////////////
 
+using FftSDatum = int16_t;
+using FftSData = std::vector< FftSDatum >;
+
 template< size_t Pow >
 class Fft {
     public:
@@ -83,8 +86,8 @@ class Fft {
         static const size_t NumOut = Num >> 1;
         static const size_t Num2 = Num << 1;
 
-        using SDatum = int16_t;
-        using SData = std::vector< SDatum >;
+        using SDatum = FftSDatum;
+        using SData = FftSData;
 
         SData mReal;                // Input samples.   PUBLIC DATA!!!  Don't resize!!!
         
@@ -113,8 +116,8 @@ class Fft {
         }
         
         float calcHanningMod(size_t num) const {
-            const float mult = getHanningMult();
-            const float PiVal = getPi();
+            static const float mult = getHanningMult();
+            static const float PiVal = getPi();
             return 0.5f * (1.0f - cosf(2.0f * PiVal * num * mult));
         }
         
@@ -125,8 +128,8 @@ class Fft {
                 mHco.resize(Num);
 
                 for(auto num = 0; num < Num; ++num) {
-                    float mod = calcHanningMod(num);        // [0,1]
-                    mHco[ num ] = (float) 0x8000 * mod;                       // [0,0x7fff]
+                    float mod = calcHanningMod(num);                          // [0,1]
+                    mHco[ num ] = (float) 0x7fff * mod;                       // [0,2^15]
                 }
             }
         }
@@ -238,7 +241,8 @@ class FftPffft : public Fft< Pow > {
         }
 
         ~FftPffft() {
-            // Currently no-op
+            pffft_destroy_setup(mSetup);
+            mSetup = 0;
         }
 
 
@@ -251,6 +255,8 @@ class FftPffft : public Fft< Pow > {
             this->doCopy(mOut, mReal);
         }
 };
+
+////////////////////////////////////////////////////////////////////
 
 template< size_t Pow >
 class FftFix : public Fft< Pow > {
@@ -297,6 +303,7 @@ class FftFix : public Fft< Pow > {
         }
 };
 
+////////////////////////////////////////////////////////////////////
     // Inspired by: http://blog.podkalicki.com/attiny13-dance-lights-with-fft/
 template< size_t Pow >
 class FftTiny : public Fft< Pow > {
