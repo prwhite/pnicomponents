@@ -119,11 +119,11 @@ class BiasCalcFilter : public Filter {
     public:
 
         virtual void apply(FftSData& dst, FftSData const& src) {
-            mBias = 0;
+            int32_t tBias = 0;
             for(auto val : src) {
-                mBias += val;
+                tBias += val;
             }
-            mBias /= src.size();
+            mBias = tBias / src.size();
         }
 
         SDatum getBias() const { return mBias; }

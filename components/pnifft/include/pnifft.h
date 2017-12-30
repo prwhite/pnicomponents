@@ -203,6 +203,22 @@ class Fft {
                 mReal[ num ] = 0;
             }
         }
+
+            // Set up mReal like convToReal, but ignoring the
+            // imaginary component.
+            // mReal.size must be even (and should be Po2) 
+            // input: mReal => [ririri]
+            // output: mReal => [rrr000]
+        void resortRealImag() {
+            auto end = mReal.size();
+            auto mid = end / 2;
+            for(size_t num = 0; num < mid; ++num) {
+                mReal[ num ] =          mReal[ num * 2 ];
+            }
+            for(size_t num = mid; num < end; ++num) {
+                mReal[ num ] = 0;
+            }
+        }
 };
 
 ////////////////////////////////////////////////////////////////////
